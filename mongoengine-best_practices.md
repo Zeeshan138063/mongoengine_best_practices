@@ -8,6 +8,11 @@
   - [Document Definition](#document-definition)
   - [Fields & Validation](#fields--validation)
   - [Meta Options](#meta-options)
+  - [Regular Documents](#regular-documents)
+  - [Dynamic Documents](#dynamic-documents)
+  - [Hybrid Documents](#hybrid-documents)
+  - [Fields & Validation](#fields--validation)
+  - [Meta Options](#meta-options)
 - [Indexing Strategies](#indexing-strategies)
   - [Index Types](#index-types)
   - [Index Configuration](#index-configuration)
@@ -189,6 +194,42 @@ class Post(Document):
         }
     }
 ```
+
+
+### Dynamic Documents
+
+1. **Basic DynamicDocument**
+```python
+from mongoengine import DynamicDocument, StringField, ValidationError
+
+class ConfigStore(DynamicDocument):
+    environment = StringField(
+        required=True,
+        choices=['production', 'staging', 'development']
+    )
+    
+    def clean(self):
+        """Custom validation for dynamic fields"""
+        if hasattr(self, 'db_pool_size'):
+            if not isinstance(self.db_pool_size, int):
+                raise ValidationError("db_pool_size must be an integer")
+            if self.db_pool_size <= 0:
+                raise ValidationError("db_pool_size must be positive")
+
+# Usage:
+config = ConfigStore(
+    environment='production',
+    db_pool_size=100,    # Dynamic field
+    cache_ttl=3600,      # Dynamic field
+    feature_flags={      # Dynamic field
+        'new_ui': True,
+        'beta_features': False
+    }
+).save()
+```
+
+2. **Enhanced DynamicDocument with Field Validation**
+```python
 
 ### Understanding strict and dynamic Options: A Real-world Analogy
 
